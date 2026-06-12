@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Hệ thống Quản lý Phòng khám API
+  version: 1.0.0
+  description: Tài liệu tổng hợp toàn bộ các API hệ thống bao gồm Xác thực, Dịch vụ, Hồ sơ Bác sĩ và Đặt lịch hẹn.
+servers:
+  - url: http://localhost:5000
+    description: Local Server
+
+paths:
+  # ==========================================
+  # 1. MODULE: USER & AUTHENTICATION
+  # ==========================================
+  /api/user/register:
+    post:
+      summary: Đăng ký tài khoản người dùng mới
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  example: "benhnhan@gmail.com"
+                password:
+                  type: string
+                  example: "123456"
+                name:
+                  type: string
+                  example: "Nguyen Van A"
+      responses:
+        200:
+          description: Đăng ký thành công
+
+  /api/user/login:
+    post:
+      summary: Đăng nhập hệ thống lấy Access Token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: "admin@gmail.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        200:
+          description: Đăng nhập thành công và trả về token
+
+  # ==========================================
+  # 2. MODULE: CLINIC SERVICES
+  # ==========================================
+  /api/service/create:
+    post:
+      summary: Tạo dịch vụ khám bệnh mới (Chỉ ADMIN)
+      tags:
+        - Clinic Service
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - durationMin
+              properties:
+                name:
+                  type: string
+                  example: "Khám răng tổng quát"
+                durationMin:
+                  type: integer
+                  example: 30
+      responses:
+        200:
+          description: Tạo thành công
+
+  /api/service/update/{id}:
+    put:
+      summary: Cập nhật dịch vụ khám bệnh (Chỉ ADMIN)
+      tags:
+        - Clinic Service
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Khám răng tổng quát (Cập nhật)"
+                durationMin:
+                  type: integer
+                  example: 45
+      responses:
+        200:
+          description: Cập nhật thành công
+
+  /api/service/getall:
+    get:
+      summary: Lấy toàn bộ danh sách dịch vụ
+      tags:
+        - Clinic Service
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+  /api/service/getbyid/{id}:
+    get:
+      summary: Xem chi tiết một dịch vụ theo ID
+      tags:
+        - Clinic Service
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Thành công
+
+  /api/service/delete/{id}:
+    delete:
+      summary: Xóa cứng một dịch vụ (Chỉ ADMIN)
+      tags:
+        - Clinic Service
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  # ==========================================
+  # 3. MODULE: DOCTOR PROFILE
+  # ==========================================
+  /api/doctor/delete/{id}:
+    delete:
+      summary: Xóa hồ sơ bác sĩ (Chỉ ADMIN)
+      tags:
+        - Doctor Profile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Xóa hồ sơ bác sĩ thành công
+
+  # ==========================================
+  # 4. MODULE: APPOINTMENT (LỊCH HẸN)
+  # ==========================================
+  /api/appointment/book:
+    post:
+      summary: Bệnh nhân thực hiện đặt lịch hẹn mới
+      tags:
+        - Appointment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - startTime
+                - endTime
+                - doctorId
+                - serviceId
+              properties:
+                startTime:
+                  type: string
+                  format: date-time
+                  example: "2026-06-15T08:00:00.000Z"
+                endTime:
+                  type: string
+                  format: date-time
+                  example: "2026-06-15T09:00:00.000Z"
+                doctorId:
+                  type: string
+                  format: uuid
+                  example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+                serviceId:
+                  type: string
+                  format: uuid
+                  example: "1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+                notes:
+                  type: string
+                  example: "Tôi bị đau răng khôn ca sáng."
+      responses:
+        200:
+          description: Đặt lịch thành công
+
+  /api/appointment/patient-history:
+    get:
+      summary: Bệnh nhân xem lịch sử cuộc hẹn cá nhân
+      tags:
+        - Appointment
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+  /api/appointment/doctor-schedule:
+    get:
+      summary: Bác sĩ xem danh sách lịch hẹn cần khám của mình
+      tags:
+        - Appointment
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Thành công
+
+  /api/appointment/status/{id}:
+    patch:
+      summary: Admin hoặc Bác sĩ thay đổi trạng thái cuộc hẹn (Duyệt/Hủy/Hoàn thành)
+      tags:
+        - Appointment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED]
+                  example: "CONFIRMED"
+      responses:
+        200:
+          description: Cập nhật trạng thái thành công
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Hãy nhập chuỗi Token của bạn vào (không cần gõ chữ Bearer).
