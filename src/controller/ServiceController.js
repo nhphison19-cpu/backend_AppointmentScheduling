@@ -68,7 +68,7 @@ const getServiceById  = async (req , res)=>{
                 message : "Service id is required"
             })
         }
-        const response = await ServiceP.getServiceById(userid , serviceId )
+        const response = await ServiceP.getServiceById(user , serviceId )
         return res.status(200).json(response    )
     }catch(e){
         return res.status(500).json({

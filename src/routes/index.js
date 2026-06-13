@@ -1,12 +1,16 @@
 const UserRouter = require('./UserRouter')
 const DoctorProfileRouter =  require('./DoctorProfileRouter')
 const ServiceRoutes = require('./ServiceRoutes')
+const AppointmentRoutes = require('./AppointmentRoutes')
+const ReviewRoutes = require('./ReviewRoutes')
+
 const routes = (app) => {
 
-    app.use('/api/user' ,UserRouter )
-    app.use('/api/doctorprofile' ,DoctorProfileRouter )
-    app.use('/api/service' , ServiceRoutes )
-
+    app.use('/api/users' ,UserRouter )
+    app.use('/api/doctors' ,DoctorProfileRouter )
+    app.use('/api/services' , ServiceRoutes )
+    app.use('/api/appointments' , AppointmentRoutes )
+    app.use('/api/reviews' ,ReviewRoutes )
 
 }
 

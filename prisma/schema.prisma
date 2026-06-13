@@ -39,15 +39,22 @@ model User {
 
   appointmentAsPatient Appointment[] @relation("PatientAppoinments")
   appointmentAsDoctor  Appointment[] @relation("DoctorAppointments")
+
+  reviewsWritten Review[]       @relation("PatientReviews")
+  notifications  Notification[]
+
+  isActive Boolean @default(true)
 }
 
 model DoctorProfile {
-  id            String  @id @default(uuid())
+  id            String   @id @default(uuid())
   specialty     String
   bio           String?
   pricePerVisit Decimal
-  userid        String  @unique
-  user          User    @relation(fields: [userid], references: [id])
+  userid        String   @unique
+  user          User     @relation(fields: [userid], references: [id])
+  reviews       Review[] @relation("DoctorReviews")
+  isActive      Boolean  @default(true)
 }
 
 model Service {
@@ -55,6 +62,7 @@ model Service {
   name        String
   durationMin Int
   appointment Appointment[]
+  isActive    Boolean       @default(true)
 }
 
 model Appointment {
@@ -73,5 +81,54 @@ model Appointment {
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id])
 
-  createAt DateTime @default(now())
+  createAt      DateTime       @default(now())
+  review        Review?
+  notifications Notification[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  patientId String
+  patient   User   @relation("PatientReviews", fields: [patientId], references: [id])
+
+  doctorId String
+  doctor   DoctorProfile @relation("DoctorReviews", fields: [doctorId], references: [id])
+
+  @@index([doctorId])
+  @@index([patientId])
+}
+
+enum NOTIFICATION_TYPE {
+  APPOINTMENT_CREATED // Bệnh nhân đặt lịch thành công / Admin gán lịch
+  APPOINTMENT_CONFIRMED // Bác sĩ/Admin xác nhận lịch khám
+  APPOINTMENT_CANCELLED // Lịch bị hủy (bởi bác sĩ hoặc bệnh nhân)
+  NEW_REVIEW // Bác sĩ nhận được đánh giá mới
+  SYSTEM_ALERT // Thông báo hệ thống từ Admin
+}
+
+model Notification {
+  id        String            @id @default(uuid())
+  title     String // Tiêu đề thông báo (Ví dụ: "Lịch hẹn mới!")
+  content   String // Nội dung chi tiết (Ví dụ: "Bệnh nhân A đã đặt lịch vào lúc...")
+  type      NOTIFICATION_TYPE
+  isRead    Boolean           @default(false) // Trạng thái đã đọc hay chưa
+  createdAt DateTime          @default(now())
+
+  // Người nhận thông báo (Trỏ tới User chung, bao gồm cả Patient và Doctor)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Trường tùy chọn: Liên kết với cuộc hẹn (nếu thông báo này liên quan đến một lịch khám)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }

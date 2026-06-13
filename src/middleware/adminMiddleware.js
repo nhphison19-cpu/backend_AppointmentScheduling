@@ -1,28 +1,21 @@
-const jwt = require('jsonwebtoken')
-const dotenv =  require('dotenv') 
+const { sendError } = require('../helpers/responseHelper');
 
-const adminMiddleware    =  async(req , res , next) =>{
+const adminMiddleware = async (req, res, next) => {
     try {
-        if(!req.user){
-            return res.status(401).json({
-                status :"ERR" ,
-                message : "Không tìm thấy thông tin định danh. Vui lòng gọi authMiddleware trước!"
-            })
+        if (!req.user) {
+            return sendError(res, "Không tìm thấy thông tin định danh. Vui lòng gọi authMiddleware trước!", 401);
         }
+
         console.log("Kiểm tra quyền truy cập ADMIN cho User ID:", req.user.id);
 
-        if(req.user.role !== "ADMIN") {
-            return res.status(401).json({
-                status  :"ERR" ,
-                message : "Quyền truy cập bị từ chối. Tính năng này chỉ dành cho tài khoản ADMIN."
-            })
+        if (req.user.role !== "ADMIN") {
+            return sendError(res, "Quyền truy cập bị từ chối. Tính năng này chỉ dành cho tài khoản ADMIN.", 403);
         }
-        next()
-     }catch(e) {
-          return res.status(500).json({
-                status :"ERR" ,
-                message : e.message
-            })
-     }
+
+        next();
+    } catch (e) {
+        return sendError(res, e.message, 500);
+    }
 }
-module.exports = {adminMiddleware}
+
+module.exports = { adminMiddleware };

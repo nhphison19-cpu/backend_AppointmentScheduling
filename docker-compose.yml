@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  # 🎯 Dịch vụ 1: Hệ thống Database PostgreSQL
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: clinic_postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: clinic_admin
+      POSTGRES_PASSWORD: SecretPassword123!
+      POSTGRES_DB: clinic_management_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - clinic_network
+
+  # 🎯 Dịch vụ 2: Bộ nhớ đệm Redis (Phục vụ Rate Limiter chống Botnet)
+  redis_cache:
+    image: redis:7-alpine
+    container_name: clinic_redis_container
+    restart: always
+    command: redis-server --appendonly yes # Bật ghi dữ liệu để tránh mất cache khi restart
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - clinic_network
+
+  # 🎯 Dịch vụ 3: Ứng dụng NodeJS Express API của bạn
+  node_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clinic_api_container
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      # Kết nối nội bộ qua tên các Service thay vì dùng localhost (Docker tự phân giải IP)
+      - DATABASE_URL=postgresql://clinic_admin:SecretPassword123!@postgres_db:5432/clinic_management_db?schema=public
+      - REDIS_URL=redis://redis_cache:6379
+      - JWT_SECRET=ThayTheBangChuoiBiMatCuaBan2026!
+    depends_on:
+      - postgres_db
+      - redis_cache
+    networks:
+      - clinic_network
+
+# Tạo vùng lưu trữ dữ liệu an toàn (Không bị mất data khi tắt container)
+volumes:
+  postgres_data:
+  redis_data:
+
+# Tạo mạng nội bộ biệt lập, chặn các kết nối lạ từ ngoài hack vào DB/Redis trực tiếp
+networks:
+  clinic_network:
+    driver: bridge

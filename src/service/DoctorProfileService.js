@@ -259,6 +259,7 @@ const search  = async (Filters) => {
         }
      })
 }
+
 const updateStatus = async(DoctorID , isActive) => {
     return new Promise (async (resolve , reject )=> {
         try {
@@ -279,10 +280,8 @@ const updateStatus = async(DoctorID , isActive) => {
                 },
                 data : {
                     isActive : isActive === 'true' || isActive === true
-                },
-                select : {
-                    id : true ,  name : true , email :true , isActive : true
                 }
+                
             })
             return resolve({
                 status: "OK",
@@ -314,16 +313,7 @@ const deleteDoctor = async(userid , doctorid )=> {
             await prisma.doctorProfile.delete({
                 where : {
                     id : doctorid
-                } ,
-                 include : {
-                    user : {
-                        select : {
-                            name : true ,
-                            email : true ,
-                            avatar : true
-                        }
-                    }
-                }
+                } 
             })
             return resolve({
                 status : "OK",
